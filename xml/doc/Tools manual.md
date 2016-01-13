@@ -105,6 +105,18 @@ Use the pentestreport.xml template (which already contains some default stuff) t
 
 Make sure the XML file you've created with jEdit is valid (no errors in the Error List in jEdit).
 
+### Autobuild PDF files
+
+Instead of running the Saxon and FOP commands as described in the next sections, it is also possible to run:
+
+```./convertxmltopdf myreport.xml mystylesheet.xsl myreport.pdf```
+
+The script will then build and display the generated PDF file. It refreshes automatically.
+
+The script accepts an XML and XSL file as arguments and optionally the name for your PDF file. If a PDF filename is ommitted, the name of the XML file is used.
+The paths where Saxon and FOP are installed, as well as the refresh rate (in seconds) can be modified in the top section of the script. Just open convertxmltopdf with your favorite editor and edit!   
+This executable script is found in the directory templates/xml and runs on Linux only.
+
 ### Saxon
 
 To transform your XML file into XSL-FO, use the following command from the saxon directory:
