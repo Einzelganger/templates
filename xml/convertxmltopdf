@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Convert xml file with xsl stylesheet to pdf document
 
@@ -13,7 +13,7 @@ declare -r REFRESH=5 #refresh rate for the PDF
 # Arguments: *.xml *.xsl Optional *.pdf
 # Returns: none
 ##############################################
-declare -r USAGE='Usage: convertxmltopdf.sh myreport.xml myreportstyle.xsl [/path/to/report.pdf]'
+declare -r USAGE='Usage: convertxmltopdf myreport.xml myreportstyle.xsl [/path/to/report.pdf]'
 declare -r WHATIS='Creates a PDF file from a XML and XSL (stylesheet) file.
  By default it uses the same name for the PDF file'  
 
