@@ -1,0 +1,200 @@
+#!/usr/bin/env bash
+#
+#Sets up an environment to edit XML files and transform them to PDF documents
+#Installs Saxon, FOP, Java, jEdit and required fonts
+#tested on a Debian/Ubuntu system
+#
+
+#Edit if needed
+declare -r SAXON_URL='http://sourceforge.net/projects/saxon/files/latest/download'
+declare -r FONTS_URL='https://fedorahosted.org/releases/l/i/liberation-fonts/liberation-fonts-ttf-1.07.3.tar.gz'
+declare -r FONTS_DIR='/usr/share/fonts/truetype'
+declare -r XCONF_INSTALL_PATH='/etc/fop/conf' #the path normally varies
+declare -r FONTS_SRV="xlsfonts"
+declare -r JEDIT_URL='http://sourceforge.net/projects/jedit/files/latest/download'
+
+#Don't touch unless you know what you're doing.
+###############################################
+
+_readInput(){
+  while true; do
+    read -p "$1"' is not found. Do you wish to install? (Yes/No/Quit): ' answer
+    local answer=$(echo $answer | tr '[:upper:]' '[:lower:]')
+    case "$answer" in
+      y|yes|n|no|skip)
+        echo $answer
+        break;
+      ;;
+      q|quit)
+      ;;
+    esac
+  done   
+}
+
+_isInstalled(){
+  echo "$1 is already installed"
+}
+
+_deadLink(){
+  echo "$1 can't be installed. Check link $2"
+}
+
+_isZip(){
+  file --mime-type "$1" | grep -q 'zip$'
+  echo "$?"
+}
+
+installFonts(){
+  local -i result="$1"
+  local liberation_dir=$FONTS_DIR'/liberation'
+  local narrow_installed=$($FONTS_SRV | grep -ie 'liberation sans narrow' | wc -l)
+  local mono_installed=$($FONTS_SRV | grep -ie 'liberation mono' | wc -l)
+  if [ $narrow_installed -gt 0 ] && [ $mono_installed -gt 0 ] || [ -d $liberation_dir ]; then
+    _isInstalled 'font'
+  else
+    echo 'installing fonts'
+    local fonts_archive="fonts.tar.gz"
+    wget -O "$fonts_archive" "$FONTS_URL"
+    if [ $(_isZip "$fonts_archive") == 0 ]; then
+      tar xfz "$fonts_archive" --wildcards "*.ttf" &&
+      rm "$fonts_archive" &&
+      mv "liberation-fonts-ttf-1.07.3" "$liberation_dir" 
+      echo 'updating font cache'
+      fc-cache -fv >/dev/null
+    else  
+      _deadLink 'liberation_fonts' "$FONTS_URL"
+      result+=1
+    fi
+  fi
+  return $result  
+}
+
+installSaxon() {
+  local -i result=$1
+  local saxon_zip="saxon.zip"
+  local saxon_usage='To use the program, type "java -jar /opt/saxon/saxon9he.jar" or just "saxon"'
+  local install_dir='/opt/saxon'
+  local sys_install=$(which saxon >/dev/null 2>&1; echo $?)
+  if [ ! -d "$install_dir" ] && [ $sys_install != 0 ]; then
+    local answer=$(_readInput 'saxon')
+    case "$answer" in
+      yes|y)
+        echo 'installing in /opt/saxon. '"$saxon_usage" 
+        wget -O "$saxon_zip" "$SAXON_URL"
+        if [ $(_isZip "$saxon_zip") == 0 ]; then
+          mkdir -p "$install_dir" && 
+          unzip -qq "$saxon_zip" -d "$install_dir"
+          rm -f "$saxon_zip"
+        else
+          _deadLink 'Saxon' "$SAXON_URL"
+          result+=1 
+        fi  
+      ;;
+      n|no|s|skip)
+        return $result
+      ;;  
+    esac      
+  else
+    _isInstalled 'saxon'
+    echo "$saxon_usage"
+  fi 
+  return $result
+}
+
+installJedit(){
+  wget -O jedit.jar $JEDIT_URL 
+  if [ $(_isZip "jedit.jar") == 0 ]; then
+    java -jar jedit.jar
+    rm jedit.jar
+  else
+    _deadLink 'jEdit' $JEDIT_URL
+  fi	 	
+}
+_patchFop(){
+  echo 'searching for fop config file'
+  local xconf=$(find / -name fop.xconf)
+  mkdir -p $XCONF_INSTALL_PATH
+  local new_xconf="$XCONF_INSTALL_PATH""/rosfop.xconf" 
+  cp "$xconf" "$new_xconf"
+  patch "$new_xconf" 'fop.patch' 
+  echo 'added patched fopros.xconfig'
+  return 0
+}
+
+_getInstaller(){
+  if [ $(which apt-get >/dev/null 2>&1; echo $?) = 0 ];then
+    echo "apt-get"
+  elif [ $(which yum >/dev/null 2>&1; echo $?) = 0 ];then
+    echo "yum"
+  else
+    echo "none" 
+  fi
+  return 0  
+}
+
+installPkgmProgram() {
+  local -i result=0
+  local -r openjdk_ver="openjdk-7-jre" #yep, has to be updated
+  local installer="$1"
+  shift #$1 is a program name now
+  while (($#)); do
+    local program="$1"    
+    local -i prog_path=$(which $program >/dev/null 2>&1; echo $?)
+    if [ "$prog_path" != 0 ]; then
+      local answer=$(_readInput $program) 
+      case $answer in
+        yes|y)
+	  case $program in
+	    java)		
+              "$installer" install -y "$openjdk_ver"    
+            ;;  
+            jedit)
+	      "$installer" install -y "$program"
+              if [ $(echo "$?") != 0 ]; then
+	        installJedit
+	      fi
+	    ;;	
+            fop)
+               "$installer" install -y "$program"
+               _patchFop
+            ;;
+          esac		 
+          shift #skip to the next program name
+        ;;
+        no|n|skip|s)
+          shift #skip to the next program name
+        ;;
+      esac
+    else
+      _isInstalled "$program"
+      shift #skip to the next program name
+    fi  
+  done        
+  return $result
+}
+
+  
+main(){ 
+  local -r user=$(whoami)
+  local -i result=0
+  if [ "$user" != 'root' ]; then
+    echo "please run as root or sudo $0"
+    exit "$result"
+  fi
+  local installer=$(_getInstaller)
+  if [ $installer != "yum" ] && [ $installer != "apt-get" ]; then   
+    echo 'no supported package manager found.'
+    echo 'Supported are yum(Red Hat/CentOS) and apt-get(Debian/Ubuntu)' 
+    result+=1
+  else    
+    installPkgmProgram "$installer" 'java' 'jedit' 'fop' 
+    result+=$?
+  fi  
+  installSaxon $result
+  result+=$? 
+  installFonts $result
+  result+=$?
+  exit $result
+}
+
+main "$@"

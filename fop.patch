@@ -1,0 +1,35 @@
+20c20,21
+<   
+---
+>   <font-base>/usr/share/fonts/truetype</font-base>
+>  
+28c29
+<   <default-page-settings height="11in" width="8.26in"/>
+---
+>   <default-page-settings height="29.7cm" width="21cm"/>
+80a82,106
+>         <font kerning="yes" embed-url="LiberationSansNarrow-Regular.ttf">
+>         <font-triplet name="LiberationSansNarrow" style="normal" weight="normal"/>
+>         </font>
+>         <font kerning="yes" embed-url="LiberationSansNarrow-Bold.ttf">
+>           <font-triplet name="LiberationSansNarrow" style="normal" weight="bold"/>
+>         </font>
+>         <font kerning="yes" embed-url="LiberationSansNarrow-Italic.ttf">
+>           <font-triplet name="LiberationSansNarrow" style="italic" weight="normal"/>
+>         </font>
+>         <font kerning="yes" embed-url="LiberationSansNarrow-BoldItalic.ttf">
+>           <font-triplet name="LiberationSansNarrow" style="italic" weight="bold"/>
+>         </font>
+>         <font kerning="yes" embed-url="LiberationMono-Regular.ttf">
+>         <font-triplet name="LiberationMono" style="normal" weight="normal"/>
+>         </font>
+>         <font kerning="yes" embed-url="LiberationMono-Bold.ttf">
+>           <font-triplet name="LiberationMono" style="normal" weight="bold"/>
+>         </font>
+>         <font kerning="yes" embed-url="LiberationMono-Italic.ttf">
+>           <font-triplet name="LiberationMono" style="italic" weight="normal"/>
+>         </font>
+>         <font kerning="yes" embed-url="LiberationMono-BoldItalic.ttf">
+>           <font-triplet name="LiberationMono" style="italic" weight="bold"/>
+>         </font>
+>         <auto-detect/>

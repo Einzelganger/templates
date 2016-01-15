@@ -3,7 +3,7 @@
 # Convert xml file with xsl stylesheet to pdf document
 
 #modify this if needed 
-declare -r XCONF='/usr/share/fop/conf/rosfop.xconf'
+declare -r XCONF='/etc/fop/conf/rosfop.xconf'
 declare -r SAXON='/opt/saxon/saxon9he.jar'
 declare -r PDF_READER='xdg-open' #opens the default PDF program
 declare -r REFRESH=5 #refresh rate for the PDF
