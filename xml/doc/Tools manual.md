@@ -12,7 +12,12 @@ This sounds cool (and it is), but it does mean you may need to use some software
 
 ## Downloading and installing
 
+### Installing with the setup script
+Use the 'setup' script in the templates directory to install jEdit, Saxon, Java and FOP on Linux. The script has been tested to run on a Debian/Ubuntu and Redhat/CentOS system. When you're done, you still have to configure jEdit. 
+
+
 ### Java
+
 
 Make sure you have at least Java 7 installed (Java 8 is fine as well). If not, download it at www.java.com.
 
@@ -38,6 +43,7 @@ Download the Liberation Mono font from http://www.fontsquirrel.com/fonts/Liberat
 
 
 ## Configuring
+
 
 ### jEdit
 
@@ -111,7 +117,7 @@ Instead of running the Saxon and FOP commands as described in the next sections,
 
 ```./convertxmltopdf myreport.xml mystylesheet.xsl myreport.pdf```
 
-The script will then build and display the generated PDF file. It refreshes automatically.
+The script, located in the templates directory, will then build and display the generated PDF file. It refreshes automatically.
 
 The script accepts an XML and XSL file as arguments and optionally the name for your PDF file. If a PDF filename is ommitted, the name of the XML file is used.
 The paths where Saxon and FOP are installed, as well as the refresh rate (in seconds) can be modified in the top section of the script. Just open convertxmltopdf with your favorite editor and edit!   
