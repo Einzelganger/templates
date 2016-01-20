@@ -109,8 +109,8 @@ _patchFop(){
   mkdir -p $XCONF_INSTALL_PATH
   local new_xconf="$XCONF_INSTALL_PATH""/rosfop.xconf" 
   cp "$xconf" "$new_xconf"
-  patch "$new_xconf" 'fop.patch' 
-  echo 'added patched rosfop.xconfig'
+  patch "$new_xconf" '../rosbot/fop.patch' 
+  echo 'added patched fop configuration'
   return 0
 }
 
