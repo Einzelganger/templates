@@ -1,7 +1,7 @@
 20c20,21
 <   
 ---
->   <font-base>/usr/share/fonts/truetype</font-base>
+>   <font-base>/usr/share/fonts/truetype/liberation</font-base>
 >  
 28c29
 <   <default-page-settings height="11in" width="8.26in"/>

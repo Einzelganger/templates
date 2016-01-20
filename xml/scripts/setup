@@ -7,7 +7,7 @@
 
 #Edit if needed
 declare -r SAXON_URL='http://sourceforge.net/projects/saxon/files/latest/download'
-declare -r FONTS_URL='https://fedorahosted.org/releases/l/i/liberation-fonts/liberation-fonts-ttf-1.07.3.tar.gz'
+declare -r FONTS_ORIG="../rosbot/*.ttf"
 declare -r FONTS_DIR='/usr/share/fonts/truetype'
 declare -r XCONF_INSTALL_PATH='/etc/fop/conf' #the path normally varies
 declare -r FONTS_SRV="xlsfonts"
@@ -24,9 +24,10 @@ _readInput(){
       y|yes|n|no|skip)
         echo $answer
         break;
-      ;;
+        ;;
       q|quit)
-      ;;
+        exit 1
+        ;;
     esac
   done   
 }
@@ -47,57 +48,49 @@ _isZip(){
 installFonts(){
   local -i result="$1"
   local liberation_dir=$FONTS_DIR'/liberation'
-  local narrow_installed=$($FONTS_SRV | grep -ie 'liberation sans narrow' | wc -l)
-  local mono_installed=$($FONTS_SRV | grep -ie 'liberation mono' | wc -l)
-  if [ $narrow_installed -gt 0 ] && [ $mono_installed -gt 0 ] || [ -d $liberation_dir ]; then
+  local narrow_installed=$( ls $liberation_dir/'LiberationSansNarrow*'>/dev/null 2>&1 | echo $?)
+  local mono_installed=$( ls $liberation_dir/'LiberationMono*' >/dev/null 2>&1 | echo $?)
+  if [ -d $liberation_dir ] && [ $narrow_installed == 0 ] && [ $mono_installed == 0 ]; then
     _isInstalled 'font'
   else
     echo 'installing fonts'
-    local fonts_archive="fonts.tar.gz"
-    wget -O "$fonts_archive" "$FONTS_URL"
-    if [ $(_isZip "$fonts_archive") == 0 ]; then
-      tar xfz "$fonts_archive" --wildcards "*.ttf" &&
-      rm "$fonts_archive" &&
-      mv "liberation-fonts-ttf-1.07.3" "$liberation_dir" 
-      echo 'updating font cache'
-      fc-cache -fv >/dev/null
-    else  
-      _deadLink 'liberation_fonts' "$FONTS_URL"
-      result+=1
-    fi
+    mkdir -p "$liberation_dir" >/dev/null 2>&1
+    cp $FONTS_ORIG "$liberation_dir" 
+    echo 'updating font cache'
+    fc-cache -fv >/dev/null
   fi
   return $result  
 }
 
 installSaxon() {
   local -i result=$1
-  local saxon_zip="saxon.zip"
-  local saxon_usage='To use the program, type "java -jar /opt/saxon/saxon9he.jar" or just "saxon"'
-  local install_dir='/opt/saxon'
-  local sys_install=$(which saxon >/dev/null 2>&1; echo $?)
-  if [ ! -d "$install_dir" ] && [ $sys_install != 0 ]; then
-    local answer=$(_readInput 'saxon')
-    case "$answer" in
-      yes|y)
-        echo 'installing in /opt/saxon. '"$saxon_usage" 
-        wget -O "$saxon_zip" "$SAXON_URL"
-        if [ $(_isZip "$saxon_zip") == 0 ]; then
-          mkdir -p "$install_dir" && 
-          unzip -qq "$saxon_zip" -d "$install_dir"
-          rm -f "$saxon_zip"
-        else
-          _deadLink 'Saxon' "$SAXON_URL"
-          result+=1 
-        fi  
-      ;;
-      n|no|s|skip)
-        return $result
-      ;;  
-    esac      
-  else
-    _isInstalled 'saxon'
-    echo "$saxon_usage"
-  fi 
+    local saxon_zip="saxon.zip"
+    local saxon_usage='To use the program, type "java -jar /opt/saxon/saxon9he.jar" or just "saxon"'
+    local install_dir='/opt/saxon'
+    local sys_install=$(which saxon >/dev/null 2>&1; echo $?)
+    if [ ! -d "$install_dir" ] && [ $sys_install != 0 ]; then
+      local answer=$(_readInput 'saxon')
+      case "$answer" in
+        yes|y)
+          echo 'installing in /opt/saxon. '"$saxon_usage" 
+          wget -O "$saxon_zip" "$SAXON_URL"
+          if [ $(_isZip "$saxon_zip") == 0 ]; then
+            mkdir -p "$install_dir" && 
+              unzip -qq "$saxon_zip" -d "$install_dir"
+              rm -f "$saxon_zip"
+          else
+            _deadLink 'Saxon' "$SAXON_URL"
+              result+=1 
+          fi  
+          ;;
+        n|no|s|skip)
+          return $result
+          ;;  
+      esac      
+    else
+      _isInstalled 'saxon'
+      echo "$saxon_usage"
+      fi 
   return $result
 }
 
@@ -108,7 +101,7 @@ installJedit(){
     rm jedit.jar
   else
     _deadLink 'jEdit' $JEDIT_URL
-  fi	 	
+  fi    
 }
 _patchFop(){
   echo 'searching for fop config file'
@@ -117,7 +110,7 @@ _patchFop(){
   local new_xconf="$XCONF_INSTALL_PATH""/rosfop.xconf" 
   cp "$xconf" "$new_xconf"
   patch "$new_xconf" 'fop.patch' 
-  echo 'added patched fopros.xconfig'
+  echo 'added patched rosfop.xconfig'
   return 0
 }
 
@@ -144,25 +137,25 @@ installPkgmProgram() {
       local answer=$(_readInput $program) 
       case $answer in
         yes|y)
-	  case $program in
-	    java)		
-              "$installer" install -y "$openjdk_ver"    
+        case $program in
+          java)   
+            "$installer" install -y "$openjdk_ver"    
             ;;  
-            jedit)
-	      "$installer" install -y "$program"
-              if [ $(echo "$?") != 0 ]; then
-	        installJedit
-	      fi
-	    ;;	
-            fop)
-               "$installer" install -y "$program"
-               _patchFop
+          jedit)
+            "$installer" install -y "$program"
+            if [ $(echo "$?") != 0 ]; then
+              installJedit
+            fi
+            ;;  
+          fop)
+            "$installer" install -y "$program"
+            _patchFop
             ;;
-          esac		 
-          shift #skip to the next program name
+        esac     
+        shift #skip to the next program name
         ;;
-        no|n|skip|s)
-          shift #skip to the next program name
+      no|n|skip|s)
+        shift #skip to the next program name
         ;;
       esac
     else

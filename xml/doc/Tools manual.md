@@ -13,7 +13,7 @@ This sounds cool (and it is), but it does mean you may need to use some software
 ## Downloading and installing
 
 ### Installing with the setup script
-Use the 'setup' script in the templates directory to install jEdit, Saxon, Java and FOP on Linux. The script has been tested to run on a Debian/Ubuntu and Redhat/CentOS system. When you're done, you still have to configure jEdit. 
+Use the 'setup' script in the templates directory to install jEdit, Saxon, Java and FOP on Linux. It can be found in the 'templates/xml/scripts' directory. The script has been tested to run on a Debian/Ubuntu and Redhat/CentOS system. When you're done, you still have to configure jEdit. 
 
 
 ### Java
@@ -36,10 +36,7 @@ Download Saxon Home Edition (HE) 9.6 **for Java** at: http://saxon.sourceforge.n
 Download Apache FOP 1.1 at https://xmlgraphics.apache.org/fop/download.html and unzip.
 
 ### Fonts
-
-Download the Liberation Sans font from http://www.fontsquirrel.com/fonts/liberation-sans and install.
-
-Download the Liberation Mono font from http://www.fontsquirrel.com/fonts/Liberation-Mono and install.
+The required fonts are found in the 'templates/xml/rosbot' directory. They must be installed. The 'setup' script can do this for you, or they must be installed to a font directory manually.
 
 
 ## Configuring
