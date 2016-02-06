@@ -6,25 +6,36 @@
 declare -r XCONF='/etc/fop/conf/rosfop.xconf'
 declare -r SAXON='/opt/saxon/saxon9he.jar'
 declare -r PDF_READER='xdg-open' #opens the default PDF program
-declare -r REFRESH=5 #refresh rate for the PDF
+declare -r REFRESH=60 #refresh rate in seconds for the PDF
+declare -r DICTIONARY='hunspell-en'
 
 #don't modify unless you know what you're doing
 ###############################################
 # Arguments: *.xml *.xsl Optional *.pdf
 # Returns: none
 ##############################################
-declare -r USAGE='Usage: convertxmltopdf myreport.xml myreportstyle.xsl [/path/to/report.pdf]'
-declare -r WHATIS='Creates a PDF file from a XML and XSL (stylesheet) file.
- By default it uses the same name for the PDF file'  
+declare -r USAGE='Usage: convertxmltopdf myfile.xml [/path/to/report.pdf]'
+declare -r WHATIS='Creates a PDF file from the given offer or report XML files.
+ By default it uses the document type and date as the PDF name'  
 
 converter(){
   local -i ret_value=0
   local xmlname="$1"
-  local xslname="$2"
+  local xslname=""
+
+  if [ $xmlname == 'report.xml' ]; then
+		xslname='../xslt/generate_report.xsl'
+  elif [ $xmlname == 'offerte.xml' ] || [ $xmlname == 'offerte-basic.xml' ]; then
+		xslname='../xslt/generate_offerte.xsl'
+  else 
+    echo "please run this script inside the source directory."
+    echo "when not generating a report or offerte, modify this script"
+	  exit 1
+  fi
   local report_fo=$(mktemp) #use a temp file
   java -jar $SAXON -s:$xmlname -xsl:$xslname -o:$report_fo -xi 
   if [[ "$?" -eq 0 ]]; then
-    local pdfname=$(_getPdfname $xmlname $3)
+    local pdfname='../target/'$(_getPdfname $xmlname $2)
     fop -c $XCONF $report_fo $pdfname >&2
     rm -f "$report_fo"
     $PDF_READER "$pdfname"
@@ -36,27 +47,28 @@ converter(){
 
 _getPdfname(){
   local pdfname=$1
+  pdfname=$(echo "$pdfname" | cut -d'.' -f1)
   if [ $# -eq 2 ];then
     pdfname=$2
+  else
+    local datum=$(date +"%Y-%m-%d_%H")
+    pdfname="$pdfname.fo.$datum"
   fi
-  pdfname=$(echo "$pdfname" | cut -d'.' -f1)
   echo "$pdfname"".pdf" 
   return 0 
 }
 
 main(){
   local -i state=0 
-  if [ $# = 1 ] && [ $1 = '-h' ]; then
+  if [ $# -eq 1 ] && [ $1 == '-h' ]; then
     echo "$WHATIS"
     state+=1
-  elif [[ $1 != *.xml || $2 != *.xsl || $# -gt 3 ]]; then 
+  elif [[ $1 != *.xml || $# -gt 2 ]]; then 
     echo "$USAGE"
     state+=1
   else
-    while [[ $state -eq 0 ]]; do
+    while [[ $state -eq 0 ]]; do	
       state=$(converter "$@")
-      echo "error found"
-      echo $noError
       sleep $REFRESH
     done
   fi
